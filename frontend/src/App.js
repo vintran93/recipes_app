@@ -7,14 +7,17 @@ import Register from './components/Register';
 import Login from './components/Login';
 import AccountSettings from './components/AccountSettings';
 import Dashboard from './components/Dashboard';
+import CreateRecipe from './components/CreateRecipe';
+import RecipeDetail from './components/RecipeDetail';
+import EditRecipe from './components/EditRecipe';
 import PasswordResetConfirm from './components/PasswordResetConfirm';
 import PasswordReset from './components/PasswordReset';
 
 import './App.css';
 
-const API_BASE_URL = "http://localhost:8000/api"; // Changed to use localhost consistently
+const API_BASE_URL = "http://localhost:8000/api";
 
-// Configure axios defaults globally
+// Configure axios defaults globally - This is crucial for CSRF handling
 axios.defaults.withCredentials = true;
 axios.defaults.xsrfCookieName = 'csrftoken';
 axios.defaults.xsrfHeaderName = 'X-CSRFToken';
@@ -34,14 +37,17 @@ const ensureCSRFToken = async () => {
   
   if (!token) {
     try {
+      // Make a GET request to a Django endpoint that sets the csrftoken cookie
+      // The /api/csrf/ endpoint is ideal for this.
       await axios.get(`${API_BASE_URL}/csrf/`);
-      token = getCSRFTokenFromCookie();
+      token = getCSRFTokenFromCookie(); // Try to get it again after the request
     } catch (error) {
       console.error('Error fetching CSRF token:', error);
     }
   }
   
   if (token) {
+    // Set the token as a default header for all subsequent requests
     axios.defaults.headers.common['X-CSRFToken'] = token;
   }
   
@@ -69,7 +75,7 @@ function AppContent() {
     console.log("Checking authentication status...");
     
     try {
-      // Ensure CSRF token is available
+      // Ensure CSRF token is available before any authenticated requests
       await ensureCSRFToken();
       
       // Check if user is authenticated
@@ -234,7 +240,7 @@ function AppContent() {
           path="/dashboard" 
           element={
             isAuthenticated ? 
-              <Dashboard username={username} onLogout={handleLogout} /> : 
+              <Dashboard apiBaseUrl={API_BASE_URL} username={username} onLogout={handleLogout} /> : // Pass apiBaseUrl to Dashboard
               <Login 
                 apiBaseUrl={API_BASE_URL} 
                 onLoginSuccess={handleLoginSuccess} 
@@ -255,12 +261,41 @@ function AppContent() {
           } 
         />
 
+        {/* Recipe Routes */}
+        <Route
+          path="/recipes/new"
+          element={
+            isAuthenticated ?
+              <CreateRecipe apiBaseUrl={API_BASE_URL} /> :
+              <Login apiBaseUrl={API_BASE_URL} onLoginSuccess={handleLoginSuccess} message="Please log in to add a recipe." />
+          }
+        />
+        {/* Route for viewing a single recipe */}
+        <Route
+          path="/recipes/:id"
+          element={
+            isAuthenticated ?
+              <RecipeDetail apiBaseUrl={API_BASE_URL} onLogout={handleLogout} /> : // Pass onLogout to RecipeDetail
+              <Login apiBaseUrl={API_BASE_URL} onLoginSuccess={handleLoginSuccess} message="Please log in to view recipe details." />
+          }
+        />
+        {/* Route for editing a recipe */}
+        <Route
+          path="/recipes/edit/:id"
+          element={
+            isAuthenticated ?
+              <EditRecipe apiBaseUrl={API_BASE_URL} /> :
+              <Login apiBaseUrl={API_BASE_URL} onLoginSuccess={handleLoginSuccess} message="Please log in to edit a recipe." />
+          }
+        />
+
+
         {/* Default route */}
         <Route 
           path="/" 
           element={
             isAuthenticated ? 
-              <Dashboard username={username} onLogout={handleLogout} /> : 
+              <Dashboard apiBaseUrl={API_BASE_URL} username={username} onLogout={handleLogout} /> : // Pass apiBaseUrl to Dashboard
               <Login apiBaseUrl={API_BASE_URL} onLoginSuccess={handleLoginSuccess} />
           } 
         />

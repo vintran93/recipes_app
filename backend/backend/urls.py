@@ -17,9 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from backend.users.views import CSRFTokenView
+from recipes.views import RecipeViewSet
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/', include('backend.users.urls')),
     path('api/csrf/', CSRFTokenView.as_view(), name='csrf_token'), # Endpoint to get CSRF token
+    # path('csrf-token/', views.get_csrf_token, name='csrf_token'),
+    # path('api/recipes/', include('recipes.urls')),
+    path('api/recipes/', RecipeViewSet.as_view({'get': 'list', 'post': 'create'}), name='recipe-list-create'),
+    path('api/recipes/<int:pk>/', RecipeViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='recipe-detail'),
 ]

@@ -38,6 +38,7 @@ function AccountSettings({ apiBaseUrl, onLogout }) {
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
 
   const navigate = useNavigate();
 
@@ -50,6 +51,7 @@ function AccountSettings({ apiBaseUrl, onLogout }) {
         
         const response = await axios.get(`${apiBaseUrl}/users/me/`);
         setUsername(response.data.username);
+        setEmail(response.data.email || ''); // Set email if available
       } catch (error) {
         console.error("Error fetching current user:", error.response?.data || error);
         setMessage('Failed to load user data.');
@@ -80,7 +82,7 @@ function AccountSettings({ apiBaseUrl, onLogout }) {
     try {
       // Ensure CSRF token is fresh
       await ensureCSRFToken(apiBaseUrl);
-      
+      // eslint-disable-next-line
       const response = await axios.post(`${apiBaseUrl}/users/change-password/`, {
         old_password: oldPassword,
         new_password: newPassword,
@@ -129,7 +131,10 @@ function AccountSettings({ apiBaseUrl, onLogout }) {
 
   return (
     <div className="App">
-      <h1>Account Settings for {username}</h1>
+      <h1>
+        Account Settings for {username}
+        {email && <span style={{ fontWeight: 'normal', fontSize: '0.8em' }}> ({email})</span>}
+      </h1>
       {message && (
         <p className={isSuccess ? 'success-message' : 'error-message'}>
           {message}
