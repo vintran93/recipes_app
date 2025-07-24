@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,12 +9,30 @@ function CreateRecipe({ apiBaseUrl }) {
   const [instructions, setInstructions] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [externalLink, setExternalLink] = useState('');
-  const [cuisineType, setCuisineType] = useState(''); // New state for cuisine type
+  const [cuisineType, setCuisineType] = useState('');
   const [message, setMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState('');
 
   const navigate = useNavigate();
+
+  // Fetch CSRF token on component mount
+  useEffect(() => {
+    const fetchCSRFToken = async () => {
+      try {
+        const response = await axios.get(`${apiBaseUrl}/csrf/`);
+        setCsrfToken(response.data.csrfToken);
+        
+        // Set default CSRF header for all axios requests
+        axios.defaults.headers.common['X-CSRFToken'] = response.data.csrfToken;
+      } catch (error) {
+        console.error('Error fetching CSRF token:', error);
+      }
+    };
+
+    fetchCSRFToken();
+  }, [apiBaseUrl]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,10 +55,19 @@ function CreateRecipe({ apiBaseUrl }) {
         instructions,
         image_url: imageUrl || null,
         external_link: externalLink || null,
-        cuisine_type: cuisineType || null, // Include cuisine type
+        cuisine_type: cuisineType || null,
       };
-      // eslint-disable-next-line
-      const response = await axios.post(`${apiBaseUrl}/recipes/`, recipeData);
+
+      // Include CSRF token in headers
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+        },
+        withCredentials: true, // Important for CSRF
+      };
+
+      const response = await axios.post(`${apiBaseUrl}/recipes/`, recipeData, config);
       
       setMessage('Recipe card added successfully!');
       setIsSuccess(true);
@@ -53,11 +80,11 @@ function CreateRecipe({ apiBaseUrl }) {
       setInstructions('');
       setImageUrl('');
       setExternalLink('');
-      setCuisineType(''); // Clear cuisine type
+      setCuisineType('');
       
-      // Redirect to dashboard after success
+      // Redirect to dashboard after success with the new recipe ID
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/dashboard', { state: { focusRecipeId: response.data.id } });
       }, 1500);
 
     } catch (error) {
@@ -71,7 +98,6 @@ function CreateRecipe({ apiBaseUrl }) {
           setMessage('Access denied. Please check your authentication.');
         }
       } else if (errorData) {
-        // Handle specific field errors or general errors from Django
         const errorMessages = Object.values(errorData).flat().join(' ');
         setMessage(errorMessages || 'Failed to add recipe card.');
       } else {
@@ -120,14 +146,25 @@ function CreateRecipe({ apiBaseUrl }) {
         </div>
 
         <div>
-          <label htmlFor="cuisineType">Cuisine Type (Optional):</label> {/* New input field */}
-          <input
+          <label htmlFor="cuisineType">Cuisine Type (Optional):</label>
+          <select
             id="cuisineType"
-            type="text"
             value={cuisineType}
             onChange={(e) => setCuisineType(e.target.value)}
-            placeholder="e.g., Italian, Mexican, Indian"
-          />
+          >
+            <option value="">Select a cuisine type...</option>
+            <option value="American">American</option>
+            <option value="Chinese">Chinese</option>
+            <option value="French">French</option>
+            <option value="Indian">Indian</option>
+            <option value="Italian">Italian</option>
+            <option value="Japanese">Japanese</option>
+            <option value="Mediterranean">Mediterranean</option>
+            <option value="Mexican">Mexican</option>
+            <option value="Middle Eastern">Middle Eastern</option>
+            <option value="Thai">Thai</option>
+            <option value="Other">Other</option>
+          </select>
         </div>
 
         <div>

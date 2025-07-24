@@ -86,10 +86,10 @@ function EditRecipe({ apiBaseUrl }) {
       setIsSuccess(true);
       setLoading(false);
 
-      // Redirect to the dashboard after success
-      setTimeout(() => {
-        navigate('/dashboard'); // Changed from `/recipes/${id}` to `/dashboard`
-      }, 1500);
+
+      // Redirect to the dashboard after success - Removed setTimeout
+      console.log('EditRecipe: Navigating to dashboard with recipe ID:', id, 'Type:', typeof id);
+      navigate('/dashboard', { state: { focusRecipeId: id } });
 
     } catch (error) {
       console.error("Error updating recipe:", error.response?.data || error);
@@ -237,3 +237,4 @@ function EditRecipe({ apiBaseUrl }) {
 }
 
 export default EditRecipe;
+
