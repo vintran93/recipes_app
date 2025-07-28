@@ -1,5 +1,5 @@
 ## Recipes Dashboard App 🧑‍🍳🍽️ <br/>
-A React application designed to help users manage, organize, and discover recipes. This dashboard allows users to easily view their recipe collection, search for specific recipes, filter by cuisine type, and even get a random recipe suggestion. The application provides a seamless user experience for managing personal culinary creations.
+A React application designed to help users manage, organize, and discover recipes. This dashboard allows users to easily view their recipe collection, search for specific recipes, filter by cuisine type, and even get a random recipe suggestion. The application provides a seamless user experience for managing personal favorite culinary recipes.
 
 <img width="1600" height="750" alt="image" src="https://github.com/user-attachments/assets/d2534191-afa5-4d23-a09c-2041726fe5e7" />
 
